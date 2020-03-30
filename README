@@ -1,0 +1,22 @@
+Automated Chicken Coop Door Controller
+
+The coopdoor.py script uses Astral and Scheduler to automate the opening and closing of the chicken coop door.
+
+A Raspberry Pi is being used to control an L289 H-Bridge motor controller which in turn is controlling
+a 20" linear actuator.
+
+The script can be modified to work at any location world wide by changing the location which Astral uses.
+The last portion of the location, elevation can be omitted but provides an even more accurate calculation of
+sunrise and dusk.
+    # astral.Location format is: City, Country, Long, Lat, Time Zone, elevation
+    loc = astral.Location(('lincoln city', 'USA', 45.0216, -123.9399, 'US/Pacific', 390))
+
+GPIO push buttons have been added in addition to automatically open and closing the coop door.
+
+The H-Bridge is controlled using GPIO pins 14 (open) and 15 (close).  The buttons use pins 18 (open) and 23 (close).
+
+The following python modules will need to be installed on the Raspberry Pi:
+gpiozero
+schedule
+astral
+
