@@ -1,3 +1,11 @@
 Automated Chicken Coop Door Controller
 
+The coopdoor.py script uses Astral and Scheduler to automate the opening and closing of the chicken coop door.
+
+The following python modules will need to be installed on the Raspberry Pi:
+
+gpiozero
+schedule
+astral
+
 Please refer to the Wiki page for details on setting the hardware up.

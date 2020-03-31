@@ -4,8 +4,9 @@ ample time to get back in the coop at night.  Astral determines both of the thos
 Schedule is used to actually schedule the opening and closing of the door.
 Runs on a Raspberry Pi with an L289 H-Bridge Controller
 Author: Mike Paxton
-Modified on: 03/30/20
+Modified on: 03/31/20
 """
+# TODO: Consider adding some form of logging to record opening and closing date/time.
 from gpiozero import Button, Motor
 import schedule
 import time
@@ -18,29 +19,29 @@ buttonOpen = Button(18)  # GPIO for open button.
 buttonClose = Button(23)  # GPIO for close button.
 motor = Motor(14, 15)  # First GPIO is open, second is close.
 
-# Initiate global variable for sunrise and dusk.  Will be updated by dawnDusk function.
+# Initiate variables for dawn_dusk function.
 sunrise = 0
 dusk = 0
 
 
-def currentTime():
-    #  Used if you wish to print current date/time of opening and closing door.
+def current_time():
+    #  Used if you opt to print current date/time of opening and closing door.
     now = datetime.datetime.now()
     now = now.strftime("%Y-%m-%d %H:%M:%S")
     return now
 
 
-def openDoor():
+def open_door():
     motor.forward()
-    print("Door opened at:", currentTime())  # Comment out if you donn't wish to print
+    print("Door opened at:", current_time())  # Comment out if you donn't wish to print
 
 
-def closeDoor():
+def close_door():
     motor.backward()
-    print("Door closed at:", currentTime())  # Comment out if you donn't wish to print
+    print("Door closed at:", current_time())  # Comment out if you donn't wish to print
 
 
-def dawnDusk():
+def dawn_dusk():
     global sunrise
     global dusk
     # astral.Location format is: City, Country, Long, Lat, Time Zone, elevation.
@@ -48,20 +49,20 @@ def dawnDusk():
     sun = loc.sun(date.today())  # Gets Astral info for today
     sunrise = (str(sun['sunrise'].isoformat())[11:16])  # Strips date.time to just the time.
     dusk = (str(sun['dusk'].isoformat())[11:16])
-    schedule.every().day.at(sunrise).do(openDoor)
-    schedule.every().day.at(dusk).do(closeDoor)
+    schedule.every().day.at(sunrise).do(open_door)
+    schedule.every().day.at(dusk).do(close_door)
 
 
-dawnDusk()  # Start the schedule
+dawn_dusk()  # Start the schedule
 
 
 try:
     while True:
 
         if buttonOpen.is_pressed:
-            openDoor()
+            open_door()
         if buttonClose.is_pressed:
-            closeDoor()
+            close_door()
 
         schedule.run_pending()
         time.sleep(1)
