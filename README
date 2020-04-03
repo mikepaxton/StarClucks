@@ -9,3 +9,19 @@ schedule
 astral
 
 Please refer to the Wiki page for details on setting the hardware up.
+
+GPIO pins used:
+
+GPIO Pins used in this project
+
+CoopDoor.py
+14 - Door Motor Open
+15 - Door Motor Close
+18 - Open Button
+23 - Close Button
+24 - Buzzer
+
+main.py
+17 - Coop light relay
+27 - Coop light on/off button.
+22 - LCD display on/off.
