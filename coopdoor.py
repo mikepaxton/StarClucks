@@ -4,7 +4,7 @@ ample time to get back in the coop at night.  Astral determines both of the thos
 Schedule is used to actually schedule the opening and closing of the door.
 Runs on a Raspberry Pi with an L289 H-Bridge Controller
 Author: Mike Paxton
-Modified on: 04/03/20 - Added buzzer when door opens/closes
+Modified on: 03/30/20
 """
 # TODO: Consider adding some form of logging to record opening and closing date/time.
 from gpiozero import Button, Motor, Buzzer
@@ -18,7 +18,6 @@ import astral
 buttonOpen = Button(18)  # GPIO for open button.
 buttonClose = Button(23)  # GPIO for close button.
 motor = Motor(14, 15)  # First GPIO is open, second is close.
-bz = Buzzer(24)
 
 # Initiate variables for dawn_dusk function.
 sunrise = 0
@@ -35,17 +34,11 @@ def current_time():
 def open_door():
     motor.forward()
     print("Door opened at:", current_time())  # Comment out if you donn't wish to print
-    bz.on()  # Sound a buzzer to alert the chickens that door is about too open.
-    time.sleep(3)
-    bz.off()
 
 
 def close_door():
     motor.backward()
     print("Door closed at:", current_time())  # Comment out if you donn't wish to print
-    bz.on()  # Sound a buzzer to alert the chickens that door is about too close.
-    time.sleep(5)
-    bz.off()
 
 
 def dawn_dusk():
