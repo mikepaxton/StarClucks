@@ -18,6 +18,7 @@ gpiozero
 schedule
 astral
 
+
 HARDWARE REQUIREMENTS:-----------------------------------------------------------
 Runs on any Raspberry Pi.
 I am using a Raspberry Pi 2 because it uses less power than newer models which is important when running from a solar
