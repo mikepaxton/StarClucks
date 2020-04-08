@@ -13,17 +13,17 @@ Astral determines the times based on current location.
 Schedule is used to actually schedule the opening and closing of the door.
 See Wiki for more information:  https://github.com/mikepaxton/StarClucks/wiki
 
-PYTHON MODULES NEEDED:-----------------------------------------------------------
+PYTHON LIBRARIES NEEDED:-----------------------------------------------------------
 gpiozero
 schedule
 astral
-
+Note: The remainder either will be installed as dependencies or already installed on the Raspberry Pi.
 
 HARDWARE REQUIREMENTS:-----------------------------------------------------------
 Runs on any Raspberry Pi.
 I am using a Raspberry Pi 2 because it uses less power than newer models which is important when running from a solar
 charged battery.
-A 16" Linear Actuator is used to raise and lower the coop door.
+A 16" Linear Actuator to raise and lower the coop door.
 An L289 H-Bridge is used to power and control the actuator.
 Momentary buttons for manually opening and closing the coop door.
 
@@ -31,6 +31,7 @@ UPDATES:------------------------------------------------------------------------
 04/03/20 - Added buzzer when door opens/closes
 04/04/20 - Added main_loop as a function
 """
+
 # TODO: Consider adding some form of logging to record opening and closing date/time.
 from gpiozero import Button, Motor
 import schedule
@@ -61,7 +62,6 @@ def open_door():
     motor.forward()
     print("Door opened at:", current_time())  # Comment out if you donn't wish to print
     time.sleep(3)
-
 
 
 def close_door():
