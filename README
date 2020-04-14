@@ -15,13 +15,13 @@ GPIO pins used:
 GPIO Pins used in this project
 
 coopdoor.py
-14 - Door Motor Open
-15 - Door Motor Close
-18 - Open Button
-23 - Close Button
-24 - Buzzer
+14 - Door Motor Open - Solid Brown
+15 - Door Motor Close - White/Brown
+18 - Open Button - Solid Green
+23 - Close Button - White/Green
+
 
 control.py - Not yet published on github.com
-17 - Coop light relay
-27 - Coop light on/off button.
+5 - Coop light relay
+17 - Coop light on/off button. - Solid Blue
 22 - LCD display on/off.
