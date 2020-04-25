@@ -32,7 +32,8 @@ UPDATES:------------------------------------------------------------------------
 This script controls and monitors various aspects of the chicken coop such as temperature, lighting and solar output.
 
 04/04/20 - Started working on LCD information display.
-0413/20 - LCD information is working correctly.
+04/13/20 - LCD information is working correctly.
+04/24/20 - Added batterystatus to LCD info dispayed.
 """
 
 from gpiozero import Button, CPUTemperature
@@ -125,12 +126,12 @@ def coopstats():
     lcd.lcd_display_string("Current: %.2f" % current, 3, 0)
     time.sleep(5)
     lcd.lcd_clear()
-    # current, voltage = batterystatus()  # Grab battery voltage, current, power and display it.
-    # lcd.lcd_display_string('Battery Status', 1, 3)
-    # lcd.lcd_display_string("Voltage: %.2f" % voltage, 2, 0)
-    # lcd.lcd_display_string("Current: %.2f" % current, 3, 0)
-    # time.sleep(5)
-    # lcd.lcd_clear()
+    current, voltage = batterystatus()  # Grab battery voltage, current, power and display it.
+    lcd.lcd_display_string('Battery Status', 1, 3)
+    lcd.lcd_display_string("Voltage: %.2f" % voltage, 2, 0)
+    lcd.lcd_display_string("Current: %.2f" % current, 3, 0)
+    time.sleep(5)
+    lcd.lcd_clear()
     cpu = CPUTemperature()
     lcd.lcd_display_string("CPU Temperature", 1, 2)
     lcd.lcd_display_string('Temp: ' + str(cpu.temperature), 2, 0)  # Display CPU temperature.
