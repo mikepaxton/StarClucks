@@ -1,18 +1,25 @@
-Automated Chicken Coop Door Controller
+Automated Chicken Coop Door and Control Panel
 
 The coopdoor.py script uses Astral and Scheduler to automate the opening and closing of the chicken coop door.
+
+The control.py script is used.....
 
 The following python modules will need to be installed on the Raspberry Pi:
 
 gpiozero
 schedule
 astral
+adafruit-circuitpython-am2320
+adafruit-circuitpython-ina260
+i2c_lcd_driver
 
 Please refer to the Wiki page for details on setting the hardware up.
+For the wiring between the Raspberry Pi and the control panel I used a 18" piece of cat 6 ethernet cable.
+The ethernet cable is used for all of the buttons, LCD and sensors inside of the control panel.
+I use a separate pair of wires for the 5 volts need inside of the panel.
 
 GPIO pins used:
 
-GPIO Pins used in this project
 
 coopdoor.py
 14 - Door Motor Open - Solid Brown
