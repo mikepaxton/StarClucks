@@ -18,17 +18,15 @@ For the wiring between the Raspberry Pi and the control panel I used a 18" piece
 The ethernet cable is used for all of the buttons, LCD and sensors inside of the control panel.
 I use a separate pair of wires for the 5 volts need inside of the panel.
 
-GPIO pins used:
 
+GPIO PIN - Description - Ethernet Wire
 
-coopdoor.py
 14 - Door Motor Open - Solid Brown
-15 - Door Motor Close - White/Brown
+15 - Door Motor Close - Brown/White
 18 - Open Button - Solid Green
-23 - Close Button - White/Green
-
-
-control.py - Not yet published on github.com
-5 - Coop light relay
-17 - Coop light on/off button. - Solid Blue
-22 - LCD display on/off.
+23 - Close Button - Green/White
+5 - Coop light relay - N/A
+17 - Coop light on/off button. - Solid Orange
+27 - LCD display on/off.  - Orange/White
+SDA - SDA - Solid Blue
+SCL - SCL - Blue/White
