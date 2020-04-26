@@ -1,13 +1,10 @@
+
 """
-Compiled, mashed and generally mutilated 2014-2015 by Denis Pleic
-Made available under GNU GENERAL PUBLIC LICENSE
-# Modified Python I2C library for Raspberry Pi
-# as found on http://www.recantha.co.uk/blog/?p=4849
-# Joined existing 'i2c_lib.py' and 'lcddriver.py' into a single library
-# added bits and pieces from various sources
+Joined existing 'i2c_lib.py' and 'lcddriver.py' into a single library.  Added bits and pieces from various sources.
 # By DenisFromHR (Denis Pleic)
 # 2015-02-10, ver 0.1
 """
+
 
 import smbus
 from time import sleep
@@ -101,8 +98,8 @@ Rs = 0b00000001  # Register select bit
 
 class lcd:
     # initializes objects and lcd
-    def __init__(self, lcd_addr):
-        self.lcd_device = i2c_device(lcd_addr)
+    def __init__(self):
+        self.lcd_device = i2c_device(ADDRESS)
 
         self.lcd_write(0x03)
         self.lcd_write(0x03)

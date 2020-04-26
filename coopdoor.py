@@ -28,8 +28,9 @@ An L289 H-Bridge is used to power and control the actuator.
 Momentary buttons for manually opening and closing the coop door.
 
 UPDATES:------------------------------------------------------------------------
-04/03/20 - Added buzzer when door opens/closes
-04/04/20 - Added main_loop as a function
+04/03/20 - Added buzzer when door opens/closes.
+04/04/20 - Added main_loop as a function.
+04/25/20 - Added useSchedule check to be able to enable/disable use of automated door schedule.
 """
 
 # TODO: Consider adding some form of logging to record opening and closing date/time.
@@ -49,6 +50,11 @@ motor = Motor(14, 15)  # First GPIO is open, second is close.
 # Initiate variables for dawn_dusk function.
 sunrise = 0
 dusk = 0
+
+#  Check if scheduled coop door should be run.  If True the dawn/dusk schedule will be run.
+#  If False the door will have to be manually opened and closed.
+# TODO: In the future use a button on the control panel to enable/disable schedule.
+useSchedule = False
 
 
 def current_time():
@@ -88,8 +94,8 @@ def main_loop():
             open_door()
         if buttonClose.is_pressed:
             close_door()
-
-        schedule.run_pending()
+        if useSchedule:
+            schedule.run_pending()
         time.sleep(1)
 
 
