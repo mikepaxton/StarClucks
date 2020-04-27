@@ -31,6 +31,7 @@ UPDATES:------------------------------------------------------------------------
 04/03/20 - Added buzzer when door opens/closes.
 04/04/20 - Added main_loop as a function.
 04/25/20 - Added useSchedule check to be able to enable/disable use of automated door schedule.
+04/26/20 - Simplified function current_time
 """
 
 # TODO: Consider adding some form of logging to record opening and closing date/time.
@@ -59,8 +60,7 @@ useSchedule = False
 
 def current_time():
     #  Used if you opt to print current date/time of opening and closing door.
-    now = datetime.datetime.now()
-    now = now.strftime("%Y-%m-%d %H:%M:%S")
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     return now
 
 
@@ -76,7 +76,7 @@ def close_door():
     time.sleep(5)
 
 
-def dawn_dusk():
+def door_schedule():
     global sunrise
     global dusk
     # astral.Location format is: City, Country, Long, Lat, Time Zone, elevation.
@@ -86,6 +86,7 @@ def dawn_dusk():
     dusk = (str(sun['dusk'].isoformat())[11:16])
     schedule.every().day.at(sunrise).do(open_door)
     schedule.every().day.at(dusk).do(close_door)
+    return sunrise, dusk
 
 
 def main_loop():
@@ -101,7 +102,6 @@ def main_loop():
 
 if __name__ == "__main__":
     try:
-        dawn_dusk()  # Start the schedule
         main_loop()
     except RuntimeError as error:
         print(error.args[0])
