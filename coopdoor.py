@@ -32,6 +32,10 @@ UPDATES:------------------------------------------------------------------------
 04/04/20 - Added main_loop as a function.
 04/25/20 - Added useSchedule check to be able to enable/disable use of automated door schedule.
 04/26/20 - Simplified function current_time
+04/29/20 - Added button 'buttonStop' to stop the motor at any point.
+           Changed the name of variables for the time of day to open and close the door.  Was sunrise and dusk, now
+           opentime and closetime.
+           Removed the return on function door_shedule as it was no longer needed.
 """
 
 # TODO: Consider adding some form of logging to record opening and closing date/time.
@@ -46,11 +50,12 @@ import sys
 #  GPIO pins used
 buttonOpen = Button(18)  # GPIO for open button.
 buttonClose = Button(23)  # GPIO for close button.
+buttonStop = Button(24)
 motor = Motor(14, 15)  # First GPIO is open, second is close.
 
-# Initiate variables for dawn_dusk function.
-sunrise = 0
-dusk = 0
+# Initiate variables for door_schedule function.
+opentime = 0
+closetime = 0
 
 #  Check if scheduled coop door should be run.  If True the dawn/dusk schedule will be run.
 #  If False the door will have to be manually opened and closed.
@@ -67,26 +72,35 @@ def current_time():
 def open_door():
     motor.forward()
     print("Door opened at:", current_time())  # Comment out if you donn't wish to print
-    time.sleep(3)
+    time.sleep(1)
 
 
 def close_door():
     motor.backward()
     print("Door closed at:", current_time())  # Comment out if you donn't wish to print
-    time.sleep(5)
+    time.sleep(1)
+
+
+def stop_door():
+    motor.stop()
+    print("Door stopped at:", current_time())  # Comment out if you donn't wish to print
+    time.sleep(1)
 
 
 def door_schedule():
-    global sunrise
-    global dusk
+    """Function grabs sunrise and dusk using your location and creates a schedule of events
+    You can change your location by modifying the fourth line of function.
+    You may specify alternate open and close times by modifying 'sunrise' and 'dusk'.  See astral docs for alternate
+    times of day"""
+    global opentime
+    global closetime
     # astral.Location format is: City, Country, Long, Lat, Time Zone, elevation.
     loc = astral.Location(('lincoln city', 'USA', 45.0216, -123.9399, 'US/Pacific', 390))
     sun = loc.sun(date.today())  # Gets Astral info for today
-    sunrise = (str(sun['sunrise'].isoformat())[11:16])  # Strips date.time to just the time.
-    dusk = (str(sun['dusk'].isoformat())[11:16])
-    schedule.every().day.at(sunrise).do(open_door)
-    schedule.every().day.at(dusk).do(close_door)
-    return sunrise, dusk
+    opentime = (str(sun['sunrise'].isoformat())[11:16])  # Grabs sunrise for today and strips date.time to just the time.
+    closetime = (str(sun['dusk'].isoformat())[11:16])  # Grabs dusk for today and strips date.time to just the time.
+    schedule.every().day.at(opentime).do(open_door)
+    schedule.every().day.at(closetime).do(close_door)
 
 
 def main_loop():
@@ -95,6 +109,8 @@ def main_loop():
             open_door()
         if buttonClose.is_pressed:
             close_door()
+        if buttonStop.is_pressed:
+            stop_door()
         if useSchedule:
             schedule.run_pending()
         time.sleep(1)

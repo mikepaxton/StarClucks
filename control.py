@@ -65,7 +65,8 @@ lcdButton = Button(27)
 # create a relay object.
 # Triggered by the output pin going low: active_high=False.
 # Initially off: initial_value=False
-coopLightRelay = gpiozero.OutputDevice(lightsOnRelay, active_high=False, initial_value=False)
+# On Pi-OT Module the relay must be set to "active_high=True" to keep from triggering and turning on lights at start up.
+coopLightRelay = gpiozero.OutputDevice(lightsOnRelay, active_high=True, initial_value=False)
 
 
 def fahrenheit(temperature):
@@ -158,7 +159,11 @@ def coopstats():
 def startup_display():
     lcd.backlight(1)
     lcd.lcd_clear()
-    lcd.lcd_display_string('Welcome to Starclucks', 1, 0)
+    lcd.lcd_display_string('Welcome to', 1, 5)
+    lcd.lcd_display_string('Starclucks', 2, 5)
+    time.sleep(5)
+    lcd.lcd_clear()
+    lcd.backlight(0)
 
 
 def main_loop():
@@ -172,7 +177,7 @@ def main_loop():
 
 if __name__ == '__main__':
     try:
-        set_coop_light_relay(False)  # start by turning the relay off
+        startup_display()
         main_loop()
     except RuntimeError as error:
         print(error.args[0])
