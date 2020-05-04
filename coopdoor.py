@@ -17,6 +17,7 @@ PYTHON LIBRARIES NEEDED:--------------------------------------------------------
 gpiozero
 schedule
 astral
+i2c_lcd_driver
 Note: The remainder either will be installed as dependencies or already installed on the Raspberry Pi.
 
 HARDWARE REQUIREMENTS:-----------------------------------------------------------
@@ -36,22 +37,31 @@ UPDATES:------------------------------------------------------------------------
            Changed the name of variables for the time of day to open and close the door.  Was sunrise and dusk, now
            opentime and closetime.
            Removed the return on function door_shedule as it was no longer needed.
+05/03/20 - Added buttonScheduleOverride so that coop door scheduling can be manually turned on/off.
+           Added two new functions to enable/disable scheduling and print the status to the LCD.
+           Added an LED that turns on when coop door scheduling is disabled.
 """
 
 # TODO: Consider adding some form of logging to record opening and closing date/time.
-from gpiozero import Button, Motor
+from gpiozero import Button, Motor, LED
 import schedule
 import time
 import datetime
 from datetime import date
 import astral
 import sys
+import i2c_lcd_driver
+
+lcd = i2c_lcd_driver.lcd(0x3f) # Initialize lcd
+
 
 #  GPIO pins used
 buttonOpen = Button(18)  # GPIO for open button.
 buttonClose = Button(23)  # GPIO for close button.
 buttonStop = Button(24)
 motor = Motor(14, 15)  # First GPIO is open, second is close.
+buttonSchedOverride = Button(25)  # Override the scheduled opening/closing of coop door.
+ledSchedOff = LED(8)  # Use LED to indicate that coop door is in override mode.
 
 # Initiate variables for door_schedule function.
 opentime = 0
@@ -103,6 +113,32 @@ def door_schedule():
     schedule.every().day.at(closetime).do(close_door)
 
 
+def scheduling_off():
+    global useSchedule
+    ledSchedOff.on()  # Turn on schedule LED.
+    useSchedule = False  # Turn off Scheduling.
+    lcd.backlight(1)  # Turn LCD backlight on
+    lcd.lcd_clear()
+    lcd.lcd_display_string('Coop Door Override', 1, 1)  # String, row, column
+    lcd.lcd_display_string('Enabled', 2, 7)
+    time.sleep(5)
+    lcd.lcd_clear()
+    lcd.backlight(0)  # Turn LCD backlight off.
+
+
+def scheduling_on():
+    global useSchedule
+    ledSchedOff.off()  # Turn off schedule LED.
+    useSchedule = True  # Turn on Scheduling.
+    lcd.backlight(1)  # Turn LCD backlight on
+    lcd.lcd_clear()
+    lcd.lcd_display_string('Coop Door Override', 1, 1)  # String, row, column
+    lcd.lcd_display_string('Disabled', 2, 7)
+    time.sleep(5)
+    lcd.lcd_clear()
+    lcd.backlight(0)  # Turn LCD backlight off.
+
+
 def main_loop():
     while True:
         if buttonOpen.is_pressed:
@@ -111,7 +147,12 @@ def main_loop():
             close_door()
         if buttonStop.is_pressed:
             stop_door()
-        if useSchedule:
+        if buttonSchedOverride.is_pressed:  # Check if override schedule button is pressed.
+            if useSchedule:
+                scheduling_off()  # If useSchedule is True/enabled then override scheduling by turning it off.
+            else:
+                scheduling_on()  # Scheduling is already off so turn it back on.
+        if useSchedule:  # Check to see if useSchedule flag is set to True.  If True then check for pending schedules.
             schedule.run_pending()
         time.sleep(1)
 
