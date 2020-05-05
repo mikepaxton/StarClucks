@@ -38,6 +38,7 @@ UPDATES:------------------------------------------------------------------------
            Fixed issue with Light Relay not working, was using wrong GPIO for Pi-IOT relay #1.  Now using GPIO 5
            Changed Light On Button to GPIO 17
            Changed LCD Button to GPIO 27
+05/05/20 - Added a debug function to allow printing of messages to terminal.
 """
 # TODO: Look into using InfluxDB and Grafana to log sensor data.
 
@@ -50,6 +51,7 @@ import board
 import busio
 import sys
 import time
+import datetime
 
 # Initialize lcd
 lcd = i2c_lcd_driver.lcd(0x3f)
@@ -68,10 +70,29 @@ lcdButton = Button(27)
 # On Pi-OT Module the relay must be set to "active_high=True" to keep from triggering and turning on lights at start up.
 coopLightRelay = gpiozero.OutputDevice(lightsOnRelay, active_high=True, initial_value=False)
 
+# Set to True will turn on debug printing to console.
+debug = True
+
+
+def current_time():
+    #  Used if you opt to print current date/time of opening and closing door.
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return now
+
+
+def debug_print(message):
+    if debug:
+        print(message + current_time())
+
+
+def c_to_f(c):
+    """Convert C to F for temp sensor, Returns as Fahrenheit int"""
+    return c * 9.0 / 5.0 + 32.0
+
 
 def fahrenheit(temperature):
     """Function takes in celsius temperature and returns temp in Fahrenheit"""
-    temperature = temperature * 9.0 / 5 + 32
+    temperature = temperature * 9.0 / 5.0 + 32.00
     return temperature
 
 
@@ -111,16 +132,16 @@ def batterystatus():
 def set_coop_light_relay(status):
     """Function called to set the initial state of the light relay.  Under current programing should always be False."""
     if status:
-        print('Setting relay: ON')
+        debug_print('Setting relay: ON')
         coopLightRelay.on()
     else:
-        print('Setting relay: OFF')
+        debug_print('Setting relay: OFF')
         coopLightRelay.off()
 
 
 def toggle_coop_light_relay():
     """Function called to turn on/off the light on relay"""
-    print('toggling relay')
+    debug_print('toggling relay')
     coopLightRelay.toggle()
 
 
@@ -130,8 +151,8 @@ def coopstats():
     lcd.lcd_clear()
     cooptemp, coophudity = am2320()
     lcd.lcd_display_string('Chicken Coop', 1, 4)  # String, row, column
-    lcd.lcd_display_string('Temp: ' + str(cooptemp), 2, 0)
-    lcd.lcd_display_string('Humidity: ' + str(coophudity), 3, 0)
+    lcd.lcd_display_string('Temp: ' + str(cooptemp) + chr(223), 2, 0)
+    lcd.lcd_display_string('Humidity: ' + str(coophudity) + chr(223), 3, 0)
     time.sleep(5)
     lcd.lcd_clear()
     current, voltage, power = solarstatus()  # Grab solar panel voltage, current, power and display it.
