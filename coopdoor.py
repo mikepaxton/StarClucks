@@ -40,6 +40,7 @@ UPDATES:------------------------------------------------------------------------
 05/03/20 - Added buttonScheduleOverride so that coop door scheduling can be manually turned on/off.
            Added two new functions to enable/disable scheduling and print the status to the LCD.
            Added an LED that turns on when coop door scheduling is disabled.
+05/05/20 - Added debug function.
 """
 
 # TODO: Consider adding some form of logging to record opening and closing date/time.
@@ -52,7 +53,7 @@ import astral
 import sys
 import i2c_lcd_driver
 
-lcd = i2c_lcd_driver.lcd(0x3f) # Initialize lcd
+lcd = i2c_lcd_driver.lcd(0x27)  # Initialize lcd.  Make sure address is correct for the LCD you are using.
 
 
 #  GPIO pins used
@@ -61,7 +62,7 @@ buttonClose = Button(23)  # GPIO for close button.
 buttonStop = Button(24)
 motor = Motor(14, 15)  # First GPIO is open, second is close.
 buttonSchedOverride = Button(25)  # Override the scheduled opening/closing of coop door.
-ledSchedOff = LED(8)  # Use LED to indicate that coop door is in override mode.
+ledSchedOff = LED(4)  # Use LED to indicate that coop door is in override mode.
 
 # Initiate variables for door_schedule function.
 opentime = 0
@@ -69,8 +70,10 @@ closetime = 0
 
 #  Check if scheduled coop door should be run.  If True the dawn/dusk schedule will be run.
 #  If False the door will have to be manually opened and closed.
-# TODO: In the future use a button on the control panel to enable/disable schedule.
-useSchedule = False
+useSchedule = True
+
+# Set to True will turn on debug printing to console.
+debug = True
 
 
 def current_time():
@@ -79,21 +82,26 @@ def current_time():
     return now
 
 
+def debug_print(message):
+    if debug:
+        print(message + current_time())
+
+
 def open_door():
     motor.forward()
-    print("Door opened at:", current_time())  # Comment out if you donn't wish to print
+    debug_print("Door opened at: ")
     time.sleep(1)
 
 
 def close_door():
     motor.backward()
-    print("Door closed at:", current_time())  # Comment out if you donn't wish to print
+    debug_print("Door closed at: ")
     time.sleep(1)
 
 
 def stop_door():
     motor.stop()
-    print("Door stopped at:", current_time())  # Comment out if you donn't wish to print
+    debug_print("Door stopped at: ")
     time.sleep(1)
 
 
@@ -111,10 +119,13 @@ def door_schedule():
     closetime = (str(sun['dusk'].isoformat())[11:16])  # Grabs dusk for today and strips date.time to just the time.
     schedule.every().day.at(opentime).do(open_door)
     schedule.every().day.at(closetime).do(close_door)
+    debug_print('Open Time:' + opentime)
+    debug_print('Close Time:' + closetime)
 
 
 def scheduling_off():
     global useSchedule
+    debug_print('Schedule Off at: ')
     ledSchedOff.on()  # Turn on schedule LED.
     useSchedule = False  # Turn off Scheduling.
     lcd.backlight(1)  # Turn LCD backlight on
@@ -128,6 +139,7 @@ def scheduling_off():
 
 def scheduling_on():
     global useSchedule
+    debug_print('Schedule On at: ')
     ledSchedOff.off()  # Turn off schedule LED.
     useSchedule = True  # Turn on Scheduling.
     lcd.backlight(1)  # Turn LCD backlight on

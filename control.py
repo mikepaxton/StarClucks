@@ -42,7 +42,7 @@ UPDATES:------------------------------------------------------------------------
 """
 # TODO: Look into using InfluxDB and Grafana to log sensor data.
 
-from gpiozero import Button, CPUTemperature
+from gpiozero import Button, CPUTemperature, PingServer
 import gpiozero
 import adafruit_am2320
 from adafruit_ina260 import INA260, Mode
@@ -54,7 +54,7 @@ import time
 import datetime
 
 # Initialize lcd
-lcd = i2c_lcd_driver.lcd(0x3f)
+lcd = i2c_lcd_driver.lcd(0x27)
 # lcd.backlight(0)  # Turn LCD backlight off to save battery power.
 
 #  GPIO button used to toggle Light relay.
@@ -63,6 +63,9 @@ lightOnButton = Button(17)  # Coop light button.
 # GPIO button to turn on/off LCD.
 lcdButton = Button(27)
 
+# Server to Ping to check for Internet/Local connection.  The host can be local or over the internet.
+# TODO: Implement ping into LCD status display.
+pingServer = '192.168.1.1'
 
 # create a relay object.
 # Triggered by the output pin going low: active_high=False.
@@ -132,21 +135,22 @@ def batterystatus():
 def set_coop_light_relay(status):
     """Function called to set the initial state of the light relay.  Under current programing should always be False."""
     if status:
-        debug_print('Setting relay: ON')
+        debug_print('Setting relay: ON ')
         coopLightRelay.on()
     else:
-        debug_print('Setting relay: OFF')
+        debug_print('Setting relay: OFF ')
         coopLightRelay.off()
 
 
 def toggle_coop_light_relay():
     """Function called to turn on/off the light on relay"""
-    debug_print('toggling relay')
+    debug_print('toggling relay ')
     coopLightRelay.toggle()
 
 
 def coopstats():
     """Function displays various sensor readings on LCD."""
+    debug_print('LCD Button Pressed: ')
     lcd.backlight(1)  # Turn LCD backlight on
     lcd.lcd_clear()
     cooptemp, coophudity = am2320()

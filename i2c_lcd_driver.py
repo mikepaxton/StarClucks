@@ -13,7 +13,7 @@ from time import sleep
 I2CBUS = 1
 
 # LCD Address
-ADDRESS = 0x3f
+ADDRESS = 0x27
 
 
 class i2c_device:

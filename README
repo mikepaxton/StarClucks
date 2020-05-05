@@ -19,15 +19,21 @@ The ethernet cable is used for all of the buttons, LCD and sensors inside of the
 I use a separate pair of wires for the 5 volts need inside of the panel.
 
 
+
+GPIO PIN - Description - 4 Strand Wire
+
+14 - Door Motor Open - Green
+15 - Door Motor Close - Yellow
+08 - Schedule LED - Red
+
 GPIO PIN - Description - Ethernet Wire
 
-14 - Door Motor Open - Blue
-15 - Door Motor Close - Blue/White
 18 - Open Button - Orange/White
 23 - Close Button - Orange
 24 - Stop Button - Brown/White
 25 - Schedule enable/disable - Brown
 5 - Coop light relay - N/A
 17 - Coop light on/off button - Green/White
-27 - LCD display on/off.  - Green - SDA - Solid Blue
+27 - LCD display on/off.  - Green
+SDA - Solid Blue
 SCL - SCL - Blue/White
