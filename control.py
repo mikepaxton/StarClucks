@@ -206,6 +206,9 @@ if __name__ == '__main__':
         main_loop()
     except RuntimeError as error:
         print(error.args[0])
+    except Exception as e:
+        # this covers all other exceptions
+        print(str(e))
     except KeyboardInterrupt:
         # turn the relay off
         set_coop_light_relay(False)
