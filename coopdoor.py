@@ -41,19 +41,24 @@ UPDATES:------------------------------------------------------------------------
            Added two new functions to enable/disable scheduling and print the status to the LCD.
            Added an LED that turns on when coop door scheduling is disabled.
 05/05/20 - Added debug function.
+05/06/20 - Created new function astral_update and split it out of door_schedule so that astral times can be updated
+           every morning at 12:01.  This makes sure at the beginning of each new day the times for door
+           opening/closing are correct for the day.
+           Removed using LCD from this program.  See second line of update 05/03/20 for why LCD was originally added.
+           Fixed bug in astral_update where getting location was causing crash.  However, it currently is not getting
+           correct times.
 """
 
 # TODO: Consider adding some form of logging to record opening and closing date/time.
+# TODO: Fix bug in astral_update which is keeping it from grabbing correct open and closing times.
 from gpiozero import Button, Motor, LED
 import schedule
 import time
 import datetime
 from datetime import date
-import astral
+from astral import LocationInfo
+from astral.sun import sun
 import sys
-import i2c_lcd_driver
-
-lcd = i2c_lcd_driver.lcd(0x27)  # Initialize lcd.  Make sure address is correct for the LCD you are using.
 
 
 #  GPIO pins used
@@ -67,6 +72,7 @@ ledSchedOff = LED(4)  # Use LED to indicate that coop door is in override mode.
 # Initiate variables for door_schedule function.
 opentime = 0
 closetime = 0
+
 
 #  Check if scheduled coop door should be run.  If True the dawn/dusk schedule will be run.
 #  If False the door will have to be manually opened and closed.
@@ -105,18 +111,24 @@ def stop_door():
     time.sleep(1)
 
 
-def door_schedule():
+def astral_update():
     """Function grabs sunrise and dusk using your location and creates a schedule of events
-    You can change your location by modifying the fourth line of function.
-    You may specify alternate open and close times by modifying 'sunrise' and 'dusk'.  See astral docs for alternate
-    times of day"""
+        You can change your location by modifying the fourth line of function.
+        You may specify alternate open and close times by modifying 'sunrise' and 'dusk'.  See astral docs for alternate
+        times of day"""
     global opentime
     global closetime
     # astral.Location format is: City, Country, Long, Lat, Time Zone, elevation.
-    loc = astral.Location(('lincoln city', 'USA', 45.0216, -123.9399, 'US/Pacific', 390))
-    sun = loc.sun(date.today())  # Gets Astral info for today
-    opentime = (str(sun['sunrise'].isoformat())[11:16])  # Grabs sunrise for today and strips date.time to just the time.
-    closetime = (str(sun['dusk'].isoformat())[11:16])  # Grabs dusk for today and strips date.time to just the time.
+    loc = LocationInfo('Lincoln City', 'USA', 'US/Pacific', 45.0052, -123.5434)
+    s = sun(loc.observer, date=date.today())
+    opentime = (str(s['sunrise'].isoformat())[11:16])  # Grabs sunrise for today and strips date.time to just the time.
+    closetime = (str(s['dusk'].isoformat())[11:16])  # Grabs dusk for today and strips date.time to just the time.
+
+
+def door_schedule():
+    """Function for scheduled opening and closing of coop door."""
+    global opentime
+    global closetime
     schedule.every().day.at(opentime).do(open_door)
     schedule.every().day.at(closetime).do(close_door)
     debug_print('Open Time:' + opentime)
@@ -128,13 +140,6 @@ def scheduling_off():
     debug_print('Schedule Off at: ')
     ledSchedOff.on()  # Turn on schedule LED.
     useSchedule = False  # Turn off Scheduling.
-    lcd.backlight(1)  # Turn LCD backlight on
-    lcd.lcd_clear()
-    lcd.lcd_display_string('Coop Door Override', 1, 1)  # String, row, column
-    lcd.lcd_display_string('Enabled', 2, 7)
-    time.sleep(5)
-    lcd.lcd_clear()
-    lcd.backlight(0)  # Turn LCD backlight off.
 
 
 def scheduling_on():
@@ -142,13 +147,6 @@ def scheduling_on():
     debug_print('Schedule On at: ')
     ledSchedOff.off()  # Turn off schedule LED.
     useSchedule = True  # Turn on Scheduling.
-    lcd.backlight(1)  # Turn LCD backlight on
-    lcd.lcd_clear()
-    lcd.lcd_display_string('Coop Door Override', 1, 1)  # String, row, column
-    lcd.lcd_display_string('Disabled', 2, 7)
-    time.sleep(5)
-    lcd.lcd_clear()
-    lcd.backlight(0)  # Turn LCD backlight off.
 
 
 def main_loop():
@@ -163,17 +161,25 @@ def main_loop():
             if useSchedule:
                 scheduling_off()  # If useSchedule is True/enabled then override scheduling by turning it off.
             else:
-                scheduling_on()  # Scheduling is already off so turn it back on.
-        if useSchedule:  # Check to see if useSchedule flag is set to True.  If True then check for pending schedules.
+                scheduling_on()  # Scheduling is already off, turn it back on.
+        if useSchedule:  # Check to see if useSchedule flag is True.  If True then check for pending schedules.
             schedule.run_pending()
         time.sleep(1)
 
 
 if __name__ == "__main__":
     try:
+        astral_update()  # Initiate astral_update.  Get Astral times.
+        door_schedule()  # Initiate door_schedule
+        schedule.every().day.at('12:01').do(astral_update())  # Run function astral_times first thing every morning
+        # in order to update times for the new day.
+
         main_loop()
     except RuntimeError as error:
         print(error.args[0])
+    except Exception as e:
+        # this covers all other exceptions
+        print(str(e))
     except KeyboardInterrupt:
         print("\nExiting application\n")
         # exit the application
