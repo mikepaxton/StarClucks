@@ -45,7 +45,7 @@ UPDATES:------------------------------------------------------------------------
 from gpiozero import Button, CPUTemperature, PingServer
 import gpiozero
 import adafruit_am2320
-from adafruit_ina260 import INA260, Mode
+from adafruit_ina260 import INA260, Mode, AveragingCount
 import i2c_lcd_driver
 import board
 import busio
@@ -70,8 +70,7 @@ pingServer = '192.168.1.1'
 # create a relay object.
 # Triggered by the output pin going low: active_high=False.
 # Initially off: initial_value=False
-# On Pi-OT Module the relay must be set to "active_high=True" to keep from triggering and turning on lights at start up.
-coopLightRelay = gpiozero.OutputDevice(lightsOnRelay, active_high=True, initial_value=False)
+coopLightRelay = gpiozero.OutputDevice(lightsOnRelay, active_high=False, initial_value=False)
 
 # Set to True will turn on debug printing to console.
 debug = True
@@ -86,11 +85,6 @@ def current_time():
 def debug_print(message):
     if debug:
         print(message + current_time())
-
-
-def c_to_f(c):
-    """Convert C to F for temp sensor, Returns as Fahrenheit int"""
-    return c * 9.0 / 5.0 + 32.0
 
 
 def fahrenheit(temperature):
@@ -112,11 +106,11 @@ def solarstatus():
     """Function initiates ina260 at address 0x40 and returns current, voltage and power of solar panel."""
     i2c = board.I2C()
     ina260 = INA260(i2c, 0x40)
+    ina260.averaging_count = AveragingCount.COUNT_4
     ina260.mode = Mode.CONTINUOUS
     current = ina260.current
     voltage = ina260.voltage
     power = ina260.power
-    #ina260.mode = Mode.SHUTDOWN  # SHUTDOWN mode returns an [Errno 121] Remote I/O error
     return current, voltage, power
 
 
@@ -128,7 +122,6 @@ def batterystatus():
     current = ina260.current
     voltage = ina260.voltage
     power = ina260.power
-    #ina260.mode = Mode.SHUTDOWN  # SHUTDOWN mode returns an [Errno 121] Remote I/O error
     return current, voltage, power
 
 
@@ -157,26 +150,26 @@ def coopstats():
     lcd.lcd_display_string('Chicken Coop', 1, 4)  # String, row, column
     lcd.lcd_display_string('Temp: ' + str(cooptemp) + chr(223), 2, 0)
     lcd.lcd_display_string('Humidity: ' + str(coophudity) + chr(223), 3, 0)
-    time.sleep(5)
+    time.sleep(4)
     lcd.lcd_clear()
     current, voltage, power = solarstatus()  # Grab solar panel voltage, current, power and display it.
     lcd.lcd_display_string('Solar Status', 1, 4)
     lcd.lcd_display_string('Voltage: %.2f V' % voltage, 2, 0)
     lcd.lcd_display_string('Current: %.2f mA' % current, 3, 0)
     lcd.lcd_display_string('Power: %.2f mW' % power, 4, 0)
-    time.sleep(5)
+    time.sleep(4)
     lcd.lcd_clear()
     current, voltage, power = batterystatus()  # Grab battery voltage, current, power and display it.
     lcd.lcd_display_string('Battery Status', 1, 3)
     lcd.lcd_display_string('Voltage: %.2f V' % voltage, 2, 0)
     lcd.lcd_display_string('Current: %.2f mA' % current, 3, 0)
     lcd.lcd_display_string('Power: %.2f mW' % power, 4, 0)
-    time.sleep(5)
+    time.sleep(4)
     lcd.lcd_clear()
     cpu = CPUTemperature()
     lcd.lcd_display_string('CPU Temperature', 1, 2)
     lcd.lcd_display_string('Temp: ' + str(cpu.temperature) + ' C', 2, 0)  # Display CPU temperature.
-    time.sleep(5)
+    time.sleep(3)
     lcd.lcd_clear()
     lcd.backlight(0)  # Turn LCD backlight off.
 
@@ -206,9 +199,9 @@ if __name__ == '__main__':
         main_loop()
     except RuntimeError as error:
         print(error.args[0])
-    except Exception as e:
-        # this covers all other exceptions
-        print(str(e))
+    # except Exception as e:
+    #     # this covers all other exceptions
+    #     print(str(e))
     except KeyboardInterrupt:
         # turn the relay off
         set_coop_light_relay(False)

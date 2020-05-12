@@ -16,8 +16,7 @@ See Wiki for more information:  https://github.com/mikepaxton/StarClucks/wiki
 PYTHON LIBRARIES NEEDED:-----------------------------------------------------------
 gpiozero
 schedule
-astral
-i2c_lcd_driver
+astral - Version 1.10.1 NEEDED!!!
 Note: The remainder either will be installed as dependencies or already installed on the Raspberry Pi.
 
 HARDWARE REQUIREMENTS:-----------------------------------------------------------
@@ -56,8 +55,7 @@ import schedule
 import time
 import datetime
 from datetime import date
-from astral import LocationInfo
-from astral.sun import sun
+import astral
 import sys
 
 
@@ -76,7 +74,7 @@ closetime = 0
 
 #  Check if scheduled coop door should be run.  If True the dawn/dusk schedule will be run.
 #  If False the door will have to be manually opened and closed.
-useSchedule = True
+useSchedule = False
 
 # Set to True will turn on debug printing to console.
 debug = True
@@ -115,14 +113,15 @@ def astral_update():
     """Function grabs sunrise and dusk using your location and creates a schedule of events
         You can change your location by modifying the fourth line of function.
         You may specify alternate open and close times by modifying 'sunrise' and 'dusk'.  See astral docs for alternate
-        times of day"""
+        times of day  NOTE: Must use Astral version 1.10.1  - Version 2.0 + has changed functions and doesn't work
+        with this code."""
     global opentime
     global closetime
     # astral.Location format is: City, Country, Long, Lat, Time Zone, elevation.
-    loc = LocationInfo('Lincoln City', 'USA', 'US/Pacific', 45.0052, -123.5434)
-    s = sun(loc.observer, date=date.today())
-    opentime = (str(s['sunrise'].isoformat())[11:16])  # Grabs sunrise for today and strips date.time to just the time.
-    closetime = (str(s['dusk'].isoformat())[11:16])  # Grabs dusk for today and strips date.time to just the time.
+    loc = astral.Location(('lincoln city', 'USA', 45.0216, -123.9399, 'US/Pacific', 390))
+    sun = loc.sun(date.today())  # Gets Astral info for today
+    opentime = (str(sun['sunrise'].isoformat())[11:16])  # Strips date.time to just the time.
+    closetime = (str(sun['sunset'].isoformat())[11:16])
 
 
 def door_schedule():
@@ -131,8 +130,8 @@ def door_schedule():
     global closetime
     schedule.every().day.at(opentime).do(open_door)
     schedule.every().day.at(closetime).do(close_door)
-    debug_print('Open Time:' + opentime)
-    debug_print('Close Time:' + closetime)
+    debug_print('Open Time: ' + opentime)
+    debug_print('Close Time: ' + closetime)
 
 
 def scheduling_off():
@@ -171,15 +170,15 @@ if __name__ == "__main__":
     try:
         astral_update()  # Initiate astral_update.  Get Astral times.
         door_schedule()  # Initiate door_schedule
-        schedule.every().day.at('12:01').do(astral_update())  # Run function astral_times first thing every morning
+        schedule.every().day.at('12:01').do(astral_update)  # Run function astral_times first thing every morning
         # in order to update times for the new day.
 
         main_loop()
     except RuntimeError as error:
         print(error.args[0])
-    except Exception as e:
-        # this covers all other exceptions
-        print(str(e))
+    # except Exception as e:
+    #     # this covers all other exceptions
+    #     print(str(e))
     except KeyboardInterrupt:
         print("\nExiting application\n")
         # exit the application
