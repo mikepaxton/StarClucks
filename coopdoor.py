@@ -49,7 +49,7 @@ UPDATES:------------------------------------------------------------------------
 """
 
 # TODO: Consider adding some form of logging to record opening and closing date/time.
-# TODO: Fix bug in astral_update which is keeping it from grabbing correct open and closing times.
+# TODO: Look into using most current version of Astral.
 from gpiozero import Button, Motor, LED
 import schedule
 import time
