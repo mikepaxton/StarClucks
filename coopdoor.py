@@ -74,7 +74,7 @@ closetime = 0
 
 #  Check if scheduled coop door should be run.  If True the dawn/dusk schedule will be run.
 #  If False the door will have to be manually opened and closed.
-useSchedule = False
+useSchedule = True
 
 # Set to True will turn on debug printing to console.
 debug = True
@@ -129,7 +129,7 @@ def door_schedule():
     global opentime
     global closetime
     schedule.every().day.at(opentime).do(open_door)
-    schedule.every().day.at(closetime).do(close_door)
+    #schedule.every().day.at(closetime).do(close_door)
     debug_print('Open Time: ' + opentime)
     debug_print('Close Time: ' + closetime)
 

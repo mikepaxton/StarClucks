@@ -54,7 +54,7 @@ import time
 import datetime
 
 # Initialize lcd
-lcd = i2c_lcd_driver.lcd(0x27)
+lcd = i2c_lcd_driver.lcd()
 # lcd.backlight(0)  # Turn LCD backlight off to save battery power.
 
 #  GPIO button used to toggle Light relay.
