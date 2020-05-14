@@ -17,6 +17,8 @@ gpiozero
 adafruit-circuitpython-am2320
 adafruit-circuitpython-ina260
 i2c_lcd_driver
+astral - Version 1.10.1 NEEDED!!!
+schedule
 Note: The remainder should be installed as dependencies or already installed on the Raspberry Pi.
 
 HARDWARE REQUIREMENTS:-----------------------------------------------------------
@@ -39,10 +41,11 @@ UPDATES:------------------------------------------------------------------------
            Changed Light On Button to GPIO 17
            Changed LCD Button to GPIO 27
 05/05/20 - Added a debug function to allow printing of messages to terminal.
+05/14/20 - Added Astral, Schedule modules and function astral_update() so I can display sunrise and sunset on LCD.
 """
 # TODO: Look into using InfluxDB and Grafana to log sensor data.
 
-from gpiozero import Button, CPUTemperature, PingServer
+from gpiozero import Button, CPUTemperature
 import gpiozero
 import adafruit_am2320
 from adafruit_ina260 import INA260, Mode, AveragingCount
@@ -51,10 +54,14 @@ import board
 import busio
 import sys
 import time
+from datetime import date
 import datetime
+import astral
+import schedule
+
 
 # Initialize lcd
-lcd = i2c_lcd_driver.lcd()
+lcd = i2c_lcd_driver.lcd(0x27)
 
 
 #  GPIO button used to toggle Light relay.
@@ -63,9 +70,6 @@ lightOnButton = Button(17)  # Coop light button.
 # GPIO button to turn on/off LCD.
 lcdButton = Button(27)
 
-# Server to Ping to check for Internet/Local connection.  The host can be local or over the internet.
-# TODO: Implement ping into LCD status display.
-pingServer = '192.168.1.1'
 
 # create a relay object.
 # Triggered by the output pin going low: active_high=False.
@@ -74,6 +78,10 @@ coopLightRelay = gpiozero.OutputDevice(lightsOnRelay, active_high=False, initial
 
 # Set to True will turn on debug printing to console.
 debug = True
+
+# Initiate variables for astral_update function.
+opentime = 0
+closetime = 0
 
 
 def current_time():
@@ -141,6 +149,22 @@ def toggle_coop_light_relay():
     coopLightRelay.toggle()
 
 
+def astral_update():
+    """Function grabs sunrise and dusk using your location and creates a schedule of events
+        You can change your location by modifying the fourth line of function.
+        You may specify alternate open and close times by modifying 'sunrise' and 'dusk'.  See astral docs for alternate
+        times of day  NOTE: Must use Astral version 1.10.1  - Version 2.0 + has changed functions and doesn't work
+        with this code."""
+    global opentime
+    global closetime
+    # astral.Location format is: City, Country, Long, Lat, Time Zone, elevation.
+    loc = astral.Location(('lincoln city', 'USA', 45.0216, -123.9399, 'US/Pacific', 390))
+    sun = loc.sun(date.today())  # Gets Astral info for today
+    opentime = (str(sun['sunrise'].isoformat())[11:16])  # Strips date.time to just the time.
+    closetime = (str(sun['sunset'].isoformat())[11:16])
+    return opentime, closetime
+
+
 def coopstats():
     """Function displays various sensor readings on LCD."""
     debug_print('LCD Button Pressed: ')
@@ -150,7 +174,7 @@ def coopstats():
     lcd.lcd_display_string('Chicken Coop', 1, 4)  # String, row, column
     lcd.lcd_display_string('Temp: ' + str(cooptemp) + chr(223), 2, 0)
     lcd.lcd_display_string('Humidity: ' + str(coophudity) + chr(223), 3, 0)
-    time.sleep(4)
+    time.sleep(3)
     lcd.lcd_clear()
     current, voltage, power = solarstatus()  # Grab solar panel voltage, current, power and display it.
     lcd.lcd_display_string('Solar Status', 1, 4)
@@ -164,6 +188,11 @@ def coopstats():
     lcd.lcd_display_string('Voltage: %.2f V' % voltage, 2, 0)
     lcd.lcd_display_string('Current: %.2f mA' % current, 3, 0)
     lcd.lcd_display_string('Power: %.2f mW' % power, 4, 0)
+    time.sleep(4)
+    lcd.lcd_clear()
+    lcd.lcd_display_string('Open & Close Time', 1, 2)
+    lcd.lcd_display_string('Sunrise: ' + str(opentime), 2, 0)
+    lcd.lcd_display_string('Sunset: ' + str(closetime), 3, 0)
     time.sleep(4)
     lcd.lcd_clear()
     cpu = CPUTemperature()
@@ -186,6 +215,7 @@ def startup_display():
 
 def main_loop():
     while True:
+        schedule.run_pending()
         if lightOnButton.is_pressed:
             toggle_coop_light_relay()
         if lcdButton.is_pressed:
@@ -195,6 +225,8 @@ def main_loop():
 
 if __name__ == '__main__':
     try:
+        astral_update()  # Initiate astral_update.  Get Astral times
+        schedule.every().day.at('12:01').do(astral_update)  # Update astral times first thing every morning.
         startup_display()
         main_loop()
     except RuntimeError as error:
