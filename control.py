@@ -65,7 +65,7 @@ lcd = i2c_lcd_driver.lcd(0x27)
 
 
 #  GPIO button used to toggle Light relay.
-lightsOnRelay = 5  # Coop light relay pin
+lightsOnRelay = 21  # Coop light relay pin
 lightOnButton = Button(17)  # Coop light button.
 # GPIO button to turn on/off LCD.
 lcdButton = Button(27)

@@ -32,7 +32,7 @@ GPIO PIN - Description - Ethernet Wire
 23 - Close Button - Orange
 24 - Stop Button - Brown/White
 25 - Schedule enable/disable - Brown
-5 - Coop light relay - N/A
+21 - Coop light relay - N/A
 17 - Coop light on/off button - Green/White
 27 - LCD display on/off.  - Green
 SDA - Solid Blue

@@ -67,7 +67,7 @@ motor = Motor(14, 15)  # First GPIO is open, second is close.
 buttonSchedOverride = Button(25)  # Override the scheduled opening/closing of coop door.
 ledSchedOff = LED(4)  # Use LED to indicate that coop door is in override mode.
 
-# Initiate variables for door_schedule function.
+# Initiate variables for astral_update function.
 opentime = 0
 closetime = 0
 
@@ -77,7 +77,7 @@ closetime = 0
 useSchedule = True
 
 # Set to True will turn on debug printing to console.
-debug = True
+debug = False
 
 
 def current_time():
@@ -129,7 +129,7 @@ def door_schedule():
     global opentime
     global closetime
     schedule.every().day.at(opentime).do(open_door)
-    #schedule.every().day.at(closetime).do(close_door)
+    schedule.every().day.at(closetime).do(close_door)
     debug_print('Open Time: ' + opentime)
     debug_print('Close Time: ' + closetime)
 
