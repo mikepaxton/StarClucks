@@ -42,6 +42,7 @@ UPDATES:------------------------------------------------------------------------
            Changed LCD Button to GPIO 27
 05/05/20 - Added a debug function to allow printing of messages to terminal.
 05/14/20 - Added Astral, Schedule modules and function astral_update() so I can display sunrise and sunset on LCD.
+10/31/20 - Fixed Astral.  Now using most recent version of astral (2.2).
 """
 # TODO: Look into using InfluxDB and Grafana to log sensor data.
 
@@ -56,7 +57,9 @@ import sys
 import time
 from datetime import date
 import datetime
-import astral
+from astral import LocationInfo
+from astral.sun import sun
+import pytz
 import schedule
 
 
@@ -153,15 +156,14 @@ def astral_update():
     """Function grabs sunrise and dusk using your location and creates a schedule of events
         You can change your location by modifying the fourth line of function.
         You may specify alternate open and close times by modifying 'sunrise' and 'dusk'.  See astral docs for alternate
-        times of day  NOTE: Must use Astral version 1.10.1  - Version 2.0 + has changed functions and doesn't work
-        with this code."""
+        times of day"""
     global opentime
     global closetime
     # astral.Location format is: City, Country, Long, Lat, Time Zone, elevation.
-    loc = astral.Location(('lincoln city', 'USA', 45.0216, -123.9399, 'US/Pacific', 390))
-    sun = loc.sun(date.today())  # Gets Astral info for today
-    opentime = (str(sun['sunrise'].isoformat())[11:16])  # Strips date.time to just the time.
-    closetime = (str(sun['sunset'].isoformat())[11:16])
+    city = LocationInfo('lincoln city', 'USA', 'US/Pacific', 45.014, -123.909)
+    s = sun(city.observer, date=date.today(), tzinfo=pytz.timezone(city.timezone))
+    opentime = (str(s['sunrise'].isoformat())[11:16])  # Strips date.time to just the time.
+    closetime = (str(s['sunset'].isoformat())[11:16])
     return opentime, closetime
 
 

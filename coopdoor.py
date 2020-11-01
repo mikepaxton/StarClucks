@@ -46,16 +46,18 @@ UPDATES:------------------------------------------------------------------------
            Removed using LCD from this program.  See second line of update 05/03/20 for why LCD was originally added.
            Fixed bug in astral_update where getting location was causing crash.  However, it currently is not getting
            correct times.
+10/31/20 - Fixed Astral.  Now using most recent version of astral (2.2).
 """
 
 # TODO: Consider adding some form of logging to record opening and closing date/time.
-# TODO: Look into using most current version of Astral.
 from gpiozero import Button, Motor, LED
 import schedule
 import time
 import datetime
 from datetime import date
-import astral
+from astral import LocationInfo
+from astral.sun import sun
+import pytz
 import sys
 
 
@@ -113,15 +115,15 @@ def astral_update():
     """Function grabs sunrise and dusk using your location and creates a schedule of events
         You can change your location by modifying the fourth line of function.
         You may specify alternate open and close times by modifying 'sunrise' and 'dusk'.  See astral docs for alternate
-        times of day  NOTE: Must use Astral version 1.10.1  - Version 2.0 + has changed functions and doesn't work
-        with this code."""
+        times of day"""
     global opentime
     global closetime
     # astral.Location format is: City, Country, Long, Lat, Time Zone, elevation.
-    loc = astral.Location(('lincoln city', 'USA', 45.0216, -123.9399, 'US/Pacific', 390))
-    sun = loc.sun(date.today())  # Gets Astral info for today
-    opentime = (str(sun['sunrise'].isoformat())[11:16])  # Strips date.time to just the time.
-    closetime = (str(sun['sunset'].isoformat())[11:16])
+    city = LocationInfo('lincoln city', 'USA', 'US/Pacific', 45.014, -123.909)
+    s = sun(city.observer, date=date.today(), tzinfo=pytz.timezone(city.timezone))
+    opentime = (str(s['sunrise'].isoformat())[11:16])  # Strips date.time to just the time.
+    closetime = (str(s['sunset'].isoformat())[11:16])
+    return opentime, closetime
 
 
 def door_schedule():
@@ -130,8 +132,8 @@ def door_schedule():
     global closetime
     schedule.every().day.at(opentime).do(open_door)
     schedule.every().day.at(closetime).do(close_door)
-    debug_print('Open Time: ' + opentime)
-    debug_print('Close Time: ' + closetime)
+    debug_print('Open Time: ' + str("opentime"))
+    debug_print('Close Time: ' + str("closetime"))
 
 
 def scheduling_off():
