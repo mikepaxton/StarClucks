@@ -28,7 +28,6 @@ An L289 H-Bridge is used to power and control the actuator.
 Momentary buttons for manually opening and closing the coop door.
 
 UPDATES:------------------------------------------------------------------------
-04/03/20 - Added buzzer when door opens/closes.
 04/04/20 - Added main_loop as a function.
 04/25/20 - Added useSchedule check to be able to enable/disable use of automated door schedule.
 04/26/20 - Simplified function current_time
@@ -77,7 +76,7 @@ lightOnButton = Button(17)  # Coop light button.
 # create a relay object.
 # Triggered by the output pin going low: active_high=False.
 # Initially off: initial_value=False
-coopLightRelay = gpiozero.OutputDevice(lightsOnRelay, active_high=False, initial_value=False)
+coopLightRelay = gpiozero.OutputDevice(lightsOnRelay, active_high=True, initial_value=False)
 
 # Initiate variables for astral_update function.
 opentime = 0
@@ -124,15 +123,15 @@ def stop_door():
 def astral_update():
     """Function grabs sunrise and dusk using your location and creates a schedule of events
         You can change your location by modifying the fourth line of function.
-        You may specify alternate open and close times by modifying 'sunrise' and 'dusk'.  See astral docs for alternate
-        times of day"""
+        You may specify alternate open and close times by modifying opentime and closetime.
+        Valid options are dawn, sunrise, sunset and dusk."""
     global opentime
     global closetime
     # astral.Location format is: City, Country, Long, Lat, Time Zone, elevation.
     city = LocationInfo('lincoln city', 'USA', 'US/Pacific', 45.014, -123.909)
     s = sun(city.observer, date=date.today(), tzinfo=pytz.timezone(city.timezone))
     opentime = (str(s['sunrise'].isoformat())[11:16])  # Strips date.time to just the time.
-    closetime = (str(s['sunset'].isoformat())[11:16])
+    closetime = (str(s['dusk'].isoformat())[11:16])
     return opentime, closetime
 
 
