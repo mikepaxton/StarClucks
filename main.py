@@ -28,24 +28,8 @@ An L289 H-Bridge is used to power and control the actuator.
 Momentary buttons for manually opening and closing the coop door.
 
 UPDATES:------------------------------------------------------------------------
-04/04/20 - Added main_loop as a function.
-04/25/20 - Added useSchedule check to be able to enable/disable use of automated door schedule.
-04/26/20 - Simplified function current_time
-04/29/20 - Added button 'buttonStop' to stop the motor at any point.
-           Changed the name of variables for the time of day to open and close the door.  Was sunrise and dusk, now
-           opentime and closetime.
-           Removed the return on function door_shedule as it was no longer needed.
-05/03/20 - Added buttonScheduleOverride so that coop door scheduling can be manually turned on/off.
-           Added two new functions to enable/disable scheduling and print the status to the LCD.
-           Added an LED that turns on when coop door scheduling is disabled.
-05/05/20 - Added debug function.
-05/06/20 - Created new function astral_update and split it out of door_schedule so that astral times can be updated
-           every morning at 12:01.  This makes sure at the beginning of each new day the times for door
-           opening/closing are correct for the day.
-           Removed using LCD from this program.  See second line of update 05/03/20 for why LCD was originally added.
-           Fixed bug in astral_update where getting location was causing crash.  However, it currently is not getting
-           correct times.
-10/31/20 - Fixed Astral.  Now using most recent version of astral (2.2).
+12/02/2020 - Merged coopdoor.py and parts of control.py into main.py.  From here on out main.py will be used to control
+the coop.
 """
 
 # TODO: Consider adding some form of logging to record opening and closing date/time.
