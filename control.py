@@ -6,6 +6,13 @@ Python Version: 3
 
 Free and open for all to use.  But put credit where credit is due.
 
+------------------------------------------------------------------------------------------------------------------------
+NOTE:  As of September 7th 2020 we lost our chicken coop and my workshop where I did my electronics projects to a wildfire
+here in Oregon.  Because of this I'm currently not making changes to this file.  I've rebuilt the coop but only running
+a Raspberry Pi with the bare minimum controls found in main.py
+Once I rebuild my workshop I'll dive back into the further automation of the coop.
+-----------------------------------------------------------------------------------------------------------------------
+
 OVERVIEW:-----------------------------------------------------------------------
 This script controls and monitors various aspects of the chicken coop such temperature, lighting and solar output.
 Monitoring information displayed on a 20x4 LCD.  A momentary push button to turn the display on and
@@ -44,6 +51,7 @@ UPDATES:------------------------------------------------------------------------
 05/14/20 - Added Astral, Schedule modules and function astral_update() so I can display sunrise and sunset on LCD.
 10/31/20 - Fixed Astral.  Now using most recent version of astral (2.2).
 """
+
 # TODO: Look into using InfluxDB and Grafana to log sensor data.
 
 from gpiozero import Button, CPUTemperature

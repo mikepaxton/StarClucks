@@ -1,7 +1,7 @@
 """
-coopdoor.py
+main.py
 Author: Mike Paxton
-Creation Date: 03/15/20
+Creation Date: 12/01/2020
 Python Version: 3
 
 Free and open for all to use.  But put credit where credit is due.
@@ -11,12 +11,13 @@ A simple program which opens and closes a chicken coop door at sunrise and dusk.
 I use dusk to give the chickens ample time to get back in the coop at night.
 Astral determines the times based on current location.
 Schedule is used to actually schedule the opening and closing of the door.
+I've also added some lighting functions in order to turn lights on and off with the push of a button.
 See Wiki for more information:  https://github.com/mikepaxton/StarClucks/wiki
 
 PYTHON LIBRARIES NEEDED:-----------------------------------------------------------
 gpiozero
 schedule
-astral - Version 1.10.1 NEEDED!!!
+astral
 Note: The remainder either will be installed as dependencies or already installed on the Raspberry Pi.
 
 HARDWARE REQUIREMENTS:-----------------------------------------------------------
@@ -30,9 +31,14 @@ Momentary buttons for manually opening and closing the coop door.
 UPDATES:------------------------------------------------------------------------
 12/02/2020 - Merged coopdoor.py and parts of control.py into main.py.  From here on out main.py will be used to control
 the coop.
+
+12/04/2020 - Added interior lights to scheduling to come on X number of minutes before coop door closes.
+             The turn off when the door closes.
 """
 
 # TODO: Consider adding some form of logging to record opening and closing date/time.
+# Todo: Look into function "set_coop_light_relay" to see if needed or not under current programming.
+
 from gpiozero import Button, Motor, LED
 import gpiozero
 import schedule
@@ -58,14 +64,15 @@ lightsOnRelay = 21  # Coop light relay pin
 lightOnButton = Button(17)  # Coop light button.
 
 # create a relay object.
-# Triggered by the output pin going low: active_high=False.
-# Initially off: initial_value=False
-coopLightRelay = gpiozero.OutputDevice(lightsOnRelay, active_high=True, initial_value=False)
+# Check the specs on relay.  Some turn on when gpio port is set low, while others need to be set high.
+# I use SainSmart 5v Relays and although they say on is "low" i've found I need to set high.
+# Additionally, i've found the "initial_value" needs to be set True in order to have them off on startup.
+coopLightRelay = gpiozero.OutputDevice(lightsOnRelay, active_high=True, initial_value=True)
 
 # Initiate variables for astral_update function.
 opentime = 0
 closetime = 0
-
+interiorlights = 0
 
 #  Check if scheduled coop door should be run.  If True the dawn/dusk schedule will be run.
 #  If False the door will have to be manually opened and closed.
@@ -73,6 +80,11 @@ useSchedule = True
 
 # Set to True will turn on debug printing to console.
 debug = True
+
+# Check if we want to turn interior lights on X number of minutes before coop door closes. We will turn off the lights
+# when the coop door closes.
+interiorLights = True
+lightMinutes = 10  # Time when lights come on before coop door closes.
 
 
 def current_time():
@@ -88,20 +100,29 @@ def debug_print(message):
 
 def open_door():
     motor.forward()
-    debug_print("Door opened at: ")
+    debug_print("Door opened ")
     time.sleep(1)
 
 
 def close_door():
     motor.backward()
-    debug_print("Door closed at: ")
+    debug_print("Door closed ")
     time.sleep(1)
+    if interiorLights:
+        interior_lights_on_off()
 
 
 def stop_door():
     motor.stop()
-    debug_print("Door stopped at: ")
+    debug_print("Door stopped ")
     time.sleep(1)
+    
+
+def interior_lights_on_off():
+    # Function checks if interiorLights is True. If so will be used to toggle interior lights on and off.
+    if interiorLights:
+        coopLightRelay.toggle()
+        debug_print("Toggled lights ")
 
 
 def astral_update():
@@ -115,8 +136,10 @@ def astral_update():
     city = LocationInfo('lincoln city', 'USA', 'US/Pacific', 45.014, -123.909)
     s = sun(city.observer, date=date.today(), tzinfo=pytz.timezone(city.timezone))
     opentime = (str(s['sunrise'].isoformat())[11:16])  # Strips date.time to just the time.
+    interiorlights = (s['dusk'] - datetime.timedelta(minutes=lightMinutes))  # Calculate lights on time bofore door closing time
+    interiorlights = (str(interiorlights.isoformat())[11:16])  # Convert "lightson" datetime to just time.
     closetime = (str(s['dusk'].isoformat())[11:16])
-    return opentime, closetime
+    return opentime, closetime, interiorlights
 
 
 def door_schedule():
@@ -127,6 +150,13 @@ def door_schedule():
     schedule.every().day.at(closetime).do(close_door)
     debug_print('Open Time: ' + str(opentime))
     debug_print('Close Time: ' + str(closetime))
+
+
+def interior_light_schedule():
+    """Function to schedule interior lights on before the door closes"""
+    global interiorlights
+    schedule.every().day.at(interiorlights).do(interior_lights_on_off)
+    debug_print("Lights come on: " + str(interiorLights))
 
 
 def scheduling_off():
@@ -153,8 +183,8 @@ def set_coop_light_relay(status):
         coopLightRelay.off()
 
 
-def toggle_coop_light_relay():
-    """Function called to turn on/off the light on relay"""
+def button_coop_light_relay():
+    """Function called to turn on/off the light on relay when button is pressed"""
     debug_print('toggling relay ')
     coopLightRelay.toggle()
 
@@ -175,7 +205,7 @@ def main_loop():
         if useSchedule:  # Check to see if useSchedule flag is True.  If True then check for pending schedules.
             schedule.run_pending()
         if lightOnButton.is_pressed:
-            toggle_coop_light_relay()
+            button_coop_light_relay()
         time.sleep(1)
 
 
@@ -183,7 +213,8 @@ if __name__ == "__main__":
     try:
         astral_update()  # Initiate astral_update.  Get Astral times.
         door_schedule()  # Initiate door_schedule
-        schedule.every().day.at('12:01').do(astral_update)  # Run function astral_times first thing every morning
+        interior_light_schedule()  # Initiate interior light schedule.
+        schedule.every().day.at('12:01').do(astral_update)  # Run function astral_times first thing every morning...
         # in order to update times for the new day.
 
         main_loop()
